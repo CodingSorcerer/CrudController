@@ -5,6 +5,7 @@ import net.lonewolfcode.opensource.springutilities.controllers.TestEntities.Pers
 import net.lonewolfcode.opensource.springutilities.controllers.TestEntities.ShapeEntity;
 import net.lonewolfcode.opensource.springutilities.controllers.TestRepos.Shapes;
 import net.lonewolfcode.opensource.springutilities.controllers.TestRepos.TestRepo;
+import net.lonewolfcode.opensource.springutilities.errors.NotFoundException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,6 +33,7 @@ public class TestCrudController {
 
     private static final String TESTREPO1 = "shapes";
     private static final String TESTREPO2 = "people";
+    private static final String UNUSEDNAME = "testrepo";
     private CrudController testController;
     private ArrayList<ShapeEntity> expectedShapes;
     private ArrayList<PersonEntity> expectedPersons;
@@ -46,11 +48,12 @@ public class TestCrudController {
         expectedPersons.add(new PersonEntity("123","Krystal"));
 
         Mockito.when(shapes.findAll()).thenReturn(expectedShapes);
+        Mockito.when(shapes.save(Mockito.any())).thenReturn(null);
         Mockito.when(testRepo.findAll()).thenReturn(expectedPersons);
 
         Map<String,Object> CrudObjects = new HashMap<>();
         CrudObjects.put(TESTREPO1, shapes);
-        CrudObjects.put("testrepo",testRepo);
+        CrudObjects.put(UNUSEDNAME,testRepo);
 
         Mockito.when(beanLister.getBeansWithAnnotation(CrudRepo.class)).thenReturn(CrudObjects);
 
@@ -58,14 +61,25 @@ public class TestCrudController {
     }
 
     @Test
-    public void testDoGetAllDefault(){
+    public void doGetAllDefault() throws NotFoundException {
         List<Object> actual = testController.doGetAll(TESTREPO1);
         Assert.assertEquals(expectedShapes,actual);
     }
 
     @Test
-    public void testDoGetAllSpecifiedPathName(){
+    public void doGetAllSpecifiedPathName() throws NotFoundException {
         List<Object> actual = testController.doGetAll(TESTREPO2);
         Assert.assertEquals(expectedPersons,actual);
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void doGetAllNonexistantRepo() throws NotFoundException {
+        testController.doGetAll(UNUSEDNAME);
+    }
+
+    @Test
+    public void doPostSuccess() throws Exception {
+        testController.doPost(TESTREPO1, "{\"name\":\"triangle\"}");
+        Mockito.verify(shapes).save(new ShapeEntity("triangle"));
     }
 }

@@ -2,6 +2,7 @@ package net.lonewolfcode.opensource.springutilities.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.lonewolfcode.opensource.springutilities.annotations.CrudRepo;
+import net.lonewolfcode.opensource.springutilities.errors.NotFoundException;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.web.bind.annotation.*;
@@ -31,8 +32,11 @@ public class CrudController {
     }
 
     @GetMapping("/{repositoryName}")
-    public List<Object> doGetAll(@PathVariable String repositoryName){
+    public List<Object> doGetAll(@PathVariable String repositoryName) throws NotFoundException {
         ArrayList<Object> output = new ArrayList<>();
+
+        if (!repositories.containsKey(repositoryName)) throw new NotFoundException(repositoryName);
+
         repositories.get(repositoryName).findAll().forEach(output::add);
         return output;
     }
