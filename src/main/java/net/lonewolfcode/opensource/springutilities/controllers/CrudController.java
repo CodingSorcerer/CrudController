@@ -1,18 +1,16 @@
 package net.lonewolfcode.opensource.springutilities.controllers;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.lonewolfcode.opensource.springutilities.annotations.CrudRepo;
 import net.lonewolfcode.opensource.springutilities.errors.NotFoundException;
+import net.lonewolfcode.opensource.springutilities.services.AnnotationService;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 public class CrudController {
@@ -22,10 +20,11 @@ public class CrudController {
     public CrudController(ListableBeanFactory beanLister) {
         mapper = new ObjectMapper();
         repositories = new HashMap<>();
+        mapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
 
         Map<String,Object> beans = beanLister.getBeansWithAnnotation(CrudRepo.class);
         for (Map.Entry<String,Object> bean:beans.entrySet()){
-            String base = bean.getValue().getClass().getAnnotation(CrudRepo.class).basePathName();
+            String base = ((CrudRepo)AnnotationService.getAnnotationFromClass(bean.getValue().getClass(),CrudRepo.class)).basePathName();
             repositories.put(base.isEmpty()?bean.getKey():base,(CrudRepository)bean.getValue());
         }
 
@@ -41,11 +40,26 @@ public class CrudController {
         return output;
     }
 
+    @GetMapping("/{repositoryName}/{id}")
+    public Object doGetStringId(@PathVariable String repositoryName,@PathVariable String id) throws NotFoundException {
+        if(!repositories.containsKey(repositoryName)) throw new NotFoundException();
+        Optional<Object> entity = repositories.get(repositoryName).findById(id);
+        if(!entity.isPresent()) throw new NotFoundException();
+        return entity.get();
+    }
+
     @PostMapping("/{repositoryName}")
-    public void doPost(@PathVariable String repositoryName, @RequestBody String rawJson) throws IOException {
+    public void doPost(@PathVariable String repositoryName, @RequestBody String rawJson) throws IOException, NotFoundException {
         CrudRepository repo = repositories.get(repositoryName);
-        Class entityClass = repo.getClass().getAnnotation(CrudRepo.class).entityClass();
-        Object entity = mapper.readValue(rawJson,entityClass);
-        repo.save(entity);
+        if (repo == null) throw new NotFoundException();
+
+        Class entityClass = ((CrudRepo)AnnotationService.getAnnotationFromClass(repo.getClass(),CrudRepo.class)).entityClass();
+        repo.saveAll(mapper.readValue(rawJson,mapper.getTypeFactory().constructCollectionType(List.class,entityClass)));
+    }
+
+    @DeleteMapping("/{repositoryName}/{id}")
+    public void doDeleteStringId(@PathVariable String repositoryName,@PathVariable String id) throws NotFoundException {
+        doGetStringId(repositoryName,id);
+        repositories.get(repositoryName).deleteById(id);
     }
 }

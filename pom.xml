@@ -6,7 +6,7 @@
 
     <groupId>net.lonewolfcode.opensource.springutilities</groupId>
     <artifactId>GenericCrudController</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0</version>
 
 
     <parent>

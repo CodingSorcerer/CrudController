@@ -16,10 +16,8 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.util.*;
 
 @SpringBootTest
 @RunWith(MockitoJUnitRunner.class)
@@ -34,6 +32,8 @@ public class TestCrudController {
     private static final String TESTREPO1 = "shapes";
     private static final String TESTREPO2 = "people";
     private static final String UNUSEDNAME = "testrepo";
+    private static final ShapeEntity RECTANGLE = new ShapeEntity("rectangle");
+    private static final PersonEntity KRYSTAL = new PersonEntity("123","Krystal");
     private CrudController testController;
     private ArrayList<ShapeEntity> expectedShapes;
     private ArrayList<PersonEntity> expectedPersons;
@@ -41,15 +41,17 @@ public class TestCrudController {
     @Before
     public void setup(){
         expectedShapes = new ArrayList<>();
-        expectedShapes.add(new ShapeEntity("rectangle"));
+        expectedShapes.add(RECTANGLE);
         expectedShapes.add(new ShapeEntity("circle"));
 
         expectedPersons = new ArrayList<>();
-        expectedPersons.add(new PersonEntity("123","Krystal"));
+        expectedPersons.add(KRYSTAL);
 
         Mockito.when(shapes.findAll()).thenReturn(expectedShapes);
-        Mockito.when(shapes.save(Mockito.any())).thenReturn(null);
+        Mockito.when(shapes.saveAll(Mockito.any())).thenReturn(null);
+        Mockito.when(shapes.findById(RECTANGLE.getName())).thenReturn(Optional.of(RECTANGLE));
         Mockito.when(testRepo.findAll()).thenReturn(expectedPersons);
+        Mockito.when(testRepo.findById(KRYSTAL.getId())).thenReturn(Optional.of(KRYSTAL));
 
         Map<String,Object> CrudObjects = new HashMap<>();
         CrudObjects.put(TESTREPO1, shapes);
@@ -80,6 +82,70 @@ public class TestCrudController {
     @Test
     public void doPostSuccess() throws Exception {
         testController.doPost(TESTREPO1, "{\"name\":\"triangle\"}");
-        Mockito.verify(shapes).save(new ShapeEntity("triangle"));
+        ArrayList<ShapeEntity> expected = new ArrayList<>();
+        expected.add(new ShapeEntity("triangle"));
+        Mockito.verify(shapes).saveAll(expected);
     }
+
+    @Test
+    public void doPostListSuccess() throws Exception {
+        testController.doPost(TESTREPO1, "[{\"name\":\"rectangle\"},{\"name\":\"circle\"}]");
+        Mockito.verify(shapes).saveAll(expectedShapes);
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void doPostNotFound() throws Exception {
+        testController.doPost(UNUSEDNAME,"");
+    }
+
+    @Test(expected = IOException.class)
+    public void doPostBadBody() throws Exception {
+        testController.doPost(TESTREPO1,"");
+    }
+
+    @Test
+    public void doGetStringIdDefault() throws NotFoundException {
+        Object actual = testController.doGetStringId(TESTREPO1,RECTANGLE.getName());
+        Assert.assertEquals(RECTANGLE,actual);
+    }
+
+    @Test
+    public void doGetStringIdSpecifiedPathName() throws NotFoundException {
+        Object actual = testController.doGetStringId(TESTREPO2,KRYSTAL.getId());
+        Assert.assertEquals(KRYSTAL,actual);
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void doGetStringIdNonexistantRepo() throws NotFoundException {
+        testController.doGetStringId(UNUSEDNAME,KRYSTAL.getId());
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void doGetStringIdNonExistantId() throws NotFoundException {
+        testController.doGetStringId(TESTREPO1,"triangle");
+    }
+
+
+    @Test
+    public void doDeleteStringIdDefault() throws NotFoundException {
+        testController.doDeleteStringId(TESTREPO1,RECTANGLE.getName());
+        Mockito.verify(shapes).deleteById(RECTANGLE.getName());
+    }
+
+    @Test
+    public void doDeleteStringIdSpecifiedPathName() throws NotFoundException {
+        testController.doDeleteStringId(TESTREPO2,KRYSTAL.getId());
+        Mockito.verify(testRepo).deleteById(KRYSTAL.getId());
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void doDeleteStringIdNonexistantRepo() throws NotFoundException {
+        testController.doDeleteStringId(UNUSEDNAME,KRYSTAL.getId());
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void doDeleteStringIdNonExistantId() throws NotFoundException {
+        testController.doDeleteStringId(TESTREPO1,"triangle");
+    }
+
 }
