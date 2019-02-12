@@ -3,6 +3,7 @@ package net.lonewolfcode.opensource.springutilities.controllers;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.lonewolfcode.opensource.springutilities.annotations.CrudRepo;
+import net.lonewolfcode.opensource.springutilities.errors.BadRequestBodyException;
 import net.lonewolfcode.opensource.springutilities.errors.NotFoundException;
 import net.lonewolfcode.opensource.springutilities.services.AnnotationService;
 import org.springframework.beans.factory.ListableBeanFactory;
@@ -89,12 +90,12 @@ public class CrudController {
      * @param repositoryName this path variable is your set basePathName or the name of the repository class
      *                       if now basePathName was provided.
      * @param rawJson the raw json string from the request body.
-     * @throws IOException This is thrown when the request body json has an invalid format.
+     * @throws BadRequestBodyException This is thrown when the request body json has an invalid format.
      * @throws NotFoundException if the path you enter refers to a nonexistent repository or if your CrudRepo
      *                           annotation is set to disallow this function, this error is thrown.
      */
     @PostMapping("/{repositoryName}")
-    public void doPost(@PathVariable String repositoryName, @RequestBody String rawJson) throws IOException, NotFoundException {
+    public void doPost(@PathVariable String repositoryName, @RequestBody String rawJson) throws NotFoundException, BadRequestBodyException {
         CrudRepository repo = repositories.get(repositoryName);
         if (repo == null) throw new NotFoundException();
 
@@ -102,7 +103,11 @@ public class CrudController {
         if (!annotation.allowPost()) throw new NotFoundException();
 
         Class entityClass = annotation.entityClass();
-        repo.saveAll(mapper.readValue(rawJson,mapper.getTypeFactory().constructCollectionType(List.class,entityClass)));
+        try {
+            repo.saveAll(mapper.readValue(rawJson, mapper.getTypeFactory().constructCollectionType(List.class, entityClass)));
+        } catch (IOException e){
+            throw new BadRequestBodyException();
+        }
     }
 
     /**
