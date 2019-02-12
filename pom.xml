@@ -6,8 +6,36 @@
 
     <groupId>net.lonewolfcode.opensource.springutilities</groupId>
     <artifactId>GenericCrudController</artifactId>
-    <version>1.0</version>
+    <version>1.0.0</version>
 
+    <name>Generic Crud Controller</name>
+    <description>
+        A crud controller for spring boot applications that provides basic get, post and delete functionality.
+    </description>
+    <url>https://github.com/CodingSorcerer/CrudController</url>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Rick Marczak</name>
+            <email>cryos@lonewolfcode.net</email>
+            <organization>none</organization>
+            <organizationUrl>https://github.com/CodingSorcerer</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/CodingSorcerer/CrudController.git</connection>
+        <developerConnection>scm:git:ssh://github.com:CodingSorcerer/CrudController.git</developerConnection>
+        <url>https://github.com/CodingSorcerer/CrudController</url>
+    </scm>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
