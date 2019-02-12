@@ -12,4 +12,8 @@ public @interface CrudRepo {
     @NotNull
     Class entityClass();
     String basePathName() default "";
+    boolean allowGetAll() default true;
+    boolean allowPost() default true;
+    boolean allowDelete() default true;
+    boolean allowGetById() default true;
 }

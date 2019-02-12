@@ -3,6 +3,7 @@ package net.lonewolfcode.opensource.springutilities.controllers;
 import net.lonewolfcode.opensource.springutilities.annotations.CrudRepo;
 import net.lonewolfcode.opensource.springutilities.controllers.TestEntities.PersonEntity;
 import net.lonewolfcode.opensource.springutilities.controllers.TestEntities.ShapeEntity;
+import net.lonewolfcode.opensource.springutilities.controllers.TestRepos.DeniedRepo;
 import net.lonewolfcode.opensource.springutilities.controllers.TestRepos.Shapes;
 import net.lonewolfcode.opensource.springutilities.controllers.TestRepos.TestRepo;
 import net.lonewolfcode.opensource.springutilities.errors.NotFoundException;
@@ -28,10 +29,13 @@ public class TestCrudController {
     private Shapes shapes;
     @Mock
     private TestRepo testRepo;
+    @Mock
+    private DeniedRepo deniedRepo;
 
     private static final String TESTREPO1 = "shapes";
     private static final String TESTREPO2 = "people";
     private static final String UNUSEDNAME = "testrepo";
+    private static final String DENIED = "denied";
     private static final ShapeEntity RECTANGLE = new ShapeEntity("rectangle");
     private static final PersonEntity KRYSTAL = new PersonEntity("123","Krystal");
     private CrudController testController;
@@ -47,15 +51,20 @@ public class TestCrudController {
         expectedPersons = new ArrayList<>();
         expectedPersons.add(KRYSTAL);
 
+        ArrayList<Object> deniedObjects = new ArrayList<>();
+        deniedObjects.add(DENIED);
+
         Mockito.when(shapes.findAll()).thenReturn(expectedShapes);
         Mockito.when(shapes.saveAll(Mockito.any())).thenReturn(null);
         Mockito.when(shapes.findById(RECTANGLE.getName())).thenReturn(Optional.of(RECTANGLE));
         Mockito.when(testRepo.findAll()).thenReturn(expectedPersons);
         Mockito.when(testRepo.findById(KRYSTAL.getId())).thenReturn(Optional.of(KRYSTAL));
+        Mockito.when(deniedRepo.findById(DENIED)).thenReturn(Optional.of(DENIED));
 
         Map<String,Object> CrudObjects = new HashMap<>();
         CrudObjects.put(TESTREPO1, shapes);
         CrudObjects.put(UNUSEDNAME,testRepo);
+        CrudObjects.put(DENIED,deniedRepo);
 
         Mockito.when(beanLister.getBeansWithAnnotation(CrudRepo.class)).thenReturn(CrudObjects);
 
@@ -148,4 +157,23 @@ public class TestCrudController {
         testController.doDeleteStringId(TESTREPO1,"triangle");
     }
 
+    @Test(expected = NotFoundException.class)
+    public void doDeleteStringIdDenied() throws NotFoundException {
+        testController.doDeleteStringId(DENIED,DENIED);
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void doPostDenied() throws NotFoundException,IOException {
+        testController.doPost(DENIED,DENIED);
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void doGetAllDenied() throws NotFoundException{
+        testController.doGetAll(DENIED);
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void doGetStringIdDenied() throws NotFoundException{
+        testController.doGetStringId(DENIED,DENIED);
+    }
 }

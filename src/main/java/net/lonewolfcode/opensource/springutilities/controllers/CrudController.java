@@ -24,7 +24,7 @@ public class CrudController {
 
         Map<String,Object> beans = beanLister.getBeansWithAnnotation(CrudRepo.class);
         for (Map.Entry<String,Object> bean:beans.entrySet()){
-            String base = ((CrudRepo)AnnotationService.getAnnotationFromClass(bean.getValue().getClass(),CrudRepo.class)).basePathName();
+            String base = AnnotationService.getCrudRepository(bean.getValue().getClass()).basePathName();
             repositories.put(base.isEmpty()?bean.getKey():base,(CrudRepository)bean.getValue());
         }
 
@@ -35,6 +35,8 @@ public class CrudController {
         ArrayList<Object> output = new ArrayList<>();
 
         if (!repositories.containsKey(repositoryName)) throw new NotFoundException(repositoryName);
+        if (!AnnotationService.getCrudRepository(repositories.get(repositoryName).getClass()).allowGetAll())
+            throw new NotFoundException();
 
         repositories.get(repositoryName).findAll().forEach(output::add);
         return output;
@@ -42,10 +44,10 @@ public class CrudController {
 
     @GetMapping("/{repositoryName}/{id}")
     public Object doGetStringId(@PathVariable String repositoryName,@PathVariable String id) throws NotFoundException {
-        if(!repositories.containsKey(repositoryName)) throw new NotFoundException();
-        Optional<Object> entity = repositories.get(repositoryName).findById(id);
-        if(!entity.isPresent()) throw new NotFoundException();
-        return entity.get();
+        Object output = getStringId(repositoryName,id);
+        if (!AnnotationService.getCrudRepository(repositories.get(repositoryName).getClass()).allowGetById())
+            throw new NotFoundException();
+        return output;
     }
 
     @PostMapping("/{repositoryName}")
@@ -53,13 +55,25 @@ public class CrudController {
         CrudRepository repo = repositories.get(repositoryName);
         if (repo == null) throw new NotFoundException();
 
-        Class entityClass = ((CrudRepo)AnnotationService.getAnnotationFromClass(repo.getClass(),CrudRepo.class)).entityClass();
+        CrudRepo annotation = AnnotationService.getCrudRepository(repo.getClass());
+        if (!annotation.allowPost()) throw new NotFoundException();
+
+        Class entityClass = annotation.entityClass();
         repo.saveAll(mapper.readValue(rawJson,mapper.getTypeFactory().constructCollectionType(List.class,entityClass)));
     }
 
     @DeleteMapping("/{repositoryName}/{id}")
     public void doDeleteStringId(@PathVariable String repositoryName,@PathVariable String id) throws NotFoundException {
-        doGetStringId(repositoryName,id);
+        getStringId(repositoryName,id);
+        if (!AnnotationService.getCrudRepository(repositories.get(repositoryName).getClass()).allowDelete())
+            throw new NotFoundException();
         repositories.get(repositoryName).deleteById(id);
+    }
+
+    private Object getStringId(String repositoryName,String id) throws NotFoundException {
+        if(!repositories.containsKey(repositoryName)) throw new NotFoundException();
+        Optional<Object> entity = repositories.get(repositoryName).findById(id);
+        if(!entity.isPresent()) throw new NotFoundException();
+        return entity.get();
     }
 }

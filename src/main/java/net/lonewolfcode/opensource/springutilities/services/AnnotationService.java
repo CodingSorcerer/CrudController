@@ -1,5 +1,7 @@
 package net.lonewolfcode.opensource.springutilities.services;
 
+import net.lonewolfcode.opensource.springutilities.annotations.CrudRepo;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedType;
 
@@ -16,5 +18,9 @@ public class AnnotationService
         }
 
         return output;
+    }
+
+    public static CrudRepo getCrudRepository(Class annotated) {
+        return (CrudRepo) getAnnotationFromClass(annotated,CrudRepo.class);
     }
 }
