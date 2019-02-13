@@ -8,6 +8,7 @@ import net.lonewolfcode.opensource.springutilities.errors.NotFoundException;
 import net.lonewolfcode.opensource.springutilities.services.AnnotationService;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -95,6 +96,7 @@ public class CrudController {
      *                           annotation is set to disallow this function, this error is thrown.
      */
     @PostMapping("/{repositoryName}")
+    @ResponseStatus(HttpStatus.CREATED)
     public void doPost(@PathVariable String repositoryName, @RequestBody String rawJson) throws NotFoundException, BadRequestBodyException {
         CrudRepository repo = repositories.get(repositoryName);
         if (repo == null) throw new NotFoundException();
