@@ -59,7 +59,6 @@ public class TestCrudController {
         Mockito.when(shapes.findById(RECTANGLE.getName())).thenReturn(Optional.of(RECTANGLE));
         Mockito.when(testRepo.findAll()).thenReturn(expectedPersons);
         Mockito.when(testRepo.findById(KRYSTAL.getId())).thenReturn(Optional.of(KRYSTAL));
-        Mockito.when(deniedRepo.findById(DENIED)).thenReturn(Optional.of(KRYSTAL));
 
         Map<String,Object> CrudObjects = new HashMap<>();
         CrudObjects.put(TESTREPO1, shapes);
