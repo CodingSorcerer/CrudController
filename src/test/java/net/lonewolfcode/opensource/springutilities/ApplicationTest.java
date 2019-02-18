@@ -36,4 +36,9 @@ public class ApplicationTest {
         mvc.perform(post("/shapes").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"triangle\"}"))
                 .andExpect(status().isCreated());
     }
+
+    @Test
+    public void typeConversionErrorThrows404() throws Exception {
+        mvc.perform(get("/people/notanint")).andExpect(status().isNotFound());
+    }
 }
