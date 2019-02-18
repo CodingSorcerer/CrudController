@@ -7,18 +7,18 @@ import java.util.Objects;
 @Entity
 public class PersonEntity {
     @Id
-    String id;
+    Integer id;
     String name;
 
     public PersonEntity(){
     }
 
-    public PersonEntity(String id, String name){
+    public PersonEntity(Integer id, String name){
         this.id = id;
         this.name = name;
     }
 
-    public String getId() {
+    public Integer getId() {
         return id;
     }
 

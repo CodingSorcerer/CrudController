@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"net.lonewolfcode.opensource.springutilities.annotations"},{"l":"net.lonewolfcode.opensource.springutilities.controllers"},{"l":"net.lonewolfcode.opensource.springutilities.errors"},{"l":"net.lonewolfcode.opensource.springutilities.services"}]

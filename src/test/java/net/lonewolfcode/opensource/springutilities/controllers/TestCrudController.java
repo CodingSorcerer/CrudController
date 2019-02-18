@@ -37,7 +37,7 @@ public class TestCrudController {
     private static final String UNUSEDNAME = "testrepo";
     private static final String DENIED = "denied";
     private static final ShapeEntity RECTANGLE = new ShapeEntity("rectangle");
-    private static final PersonEntity KRYSTAL = new PersonEntity("123","Krystal");
+    private static final PersonEntity KRYSTAL = new PersonEntity(123,"Krystal");
     private CrudController testController;
     private ArrayList<ShapeEntity> expectedShapes;
     private ArrayList<PersonEntity> expectedPersons;
@@ -112,58 +112,58 @@ public class TestCrudController {
     }
 
     @Test
-    public void doGetStringIdDefault() throws NotFoundException {
-        Object actual = testController.doGetStringId(TESTREPO1,RECTANGLE.getName());
+    public void doGetByIdDefault() throws Exception {
+        Object actual = testController.doGetById(TESTREPO1,RECTANGLE.getName());
         Assert.assertEquals(RECTANGLE,actual);
     }
 
     @Test
-    public void doGetStringIdSpecifiedPathName() throws NotFoundException {
-        Object actual = testController.doGetStringId(TESTREPO2,KRYSTAL.getId());
+    public void doGetByIdSpecifiedPathName() throws Exception {
+        Object actual = testController.doGetById(TESTREPO2,KRYSTAL.getId().toString());
         Assert.assertEquals(KRYSTAL,actual);
     }
 
     @Test(expected = NotFoundException.class)
-    public void doGetStringIdNonexistantRepo() throws NotFoundException {
-        testController.doGetStringId(UNUSEDNAME,KRYSTAL.getId());
+    public void doGetByIdNonexistantRepo() throws Exception {
+        testController.doGetById(UNUSEDNAME,KRYSTAL.getId().toString());
     }
 
     @Test(expected = NotFoundException.class)
-    public void doGetStringIdNonExistantId() throws NotFoundException {
-        testController.doGetStringId(TESTREPO1,"triangle");
+    public void doGetByIdNonExistantId() throws Exception {
+        testController.doGetById(TESTREPO1,"triangle");
     }
 
 
     @Test
-    public void doDeleteStringIdDefault() throws NotFoundException {
-        testController.doDeleteStringId(TESTREPO1,RECTANGLE.getName());
+    public void doDeleteByIdDefault() throws Exception {
+        testController.doDeleteById(TESTREPO1,RECTANGLE.getName());
         Mockito.verify(shapes).deleteById(RECTANGLE.getName());
     }
 
     @Test
-    public void doDeleteStringIdSpecifiedPathName() throws NotFoundException {
-        testController.doDeleteStringId(TESTREPO2,KRYSTAL.getId());
+    public void doDeleteByIdSpecifiedPathName() throws Exception {
+        testController.doDeleteById(TESTREPO2,KRYSTAL.getId().toString());
         Mockito.verify(testRepo).deleteById(KRYSTAL.getId());
     }
 
     @Test(expected = NotFoundException.class)
-    public void doDeleteStringIdNonexistantRepo() throws NotFoundException {
-        testController.doDeleteStringId(UNUSEDNAME,KRYSTAL.getId());
+    public void doDeleteByIdNonexistantRepo() throws Exception {
+        testController.doDeleteById(UNUSEDNAME,KRYSTAL.getId().toString());
     }
 
     @Test(expected = NotFoundException.class)
-    public void doDeleteStringIdNonExistantId() throws NotFoundException {
-        testController.doDeleteStringId(TESTREPO1,"triangle");
+    public void doDeleteByIdNonExistantId() throws Exception {
+        testController.doDeleteById(TESTREPO1,"triangle");
     }
 
     @Test(expected = NotFoundException.class)
-    public void doDeleteStringIdDenied() throws NotFoundException {
-        testController.doDeleteStringId(DENIED,KRYSTAL.getId());
+    public void doDeleteByIdDenied() throws Exception {
+        testController.doDeleteById(DENIED,KRYSTAL.getId().toString());
     }
 
     @Test(expected = NotFoundException.class)
     public void doPostDenied() throws NotFoundException,IOException {
-        testController.doPost(DENIED,KRYSTAL.getId());
+        testController.doPost(DENIED,KRYSTAL.getId().toString());
     }
 
     @Test(expected = NotFoundException.class)
@@ -172,7 +172,7 @@ public class TestCrudController {
     }
 
     @Test(expected = NotFoundException.class)
-    public void doGetStringIdDenied() throws NotFoundException{
-        testController.doGetStringId(DENIED,KRYSTAL.getId());
+    public void doGetByIdDenied() throws Exception{
+        testController.doGetById(DENIED,KRYSTAL.getId().toString());
     }
 }

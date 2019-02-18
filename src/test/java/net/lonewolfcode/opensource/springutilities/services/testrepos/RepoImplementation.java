@@ -19,13 +19,13 @@ public class RepoImplementation implements TestRepo {
     }
 
     @Override
-    public Optional<PersonEntity> findById(String s)
+    public Optional<PersonEntity> findById(Integer s)
     {
         return Optional.empty();
     }
 
     @Override
-    public boolean existsById(String s)
+    public boolean existsById(Integer s)
     {
         return false;
     }
@@ -37,7 +37,7 @@ public class RepoImplementation implements TestRepo {
     }
 
     @Override
-    public Iterable<PersonEntity> findAllById(Iterable<String> strings)
+    public Iterable<PersonEntity> findAllById(Iterable<Integer> strings)
     {
         return null;
     }
@@ -49,7 +49,7 @@ public class RepoImplementation implements TestRepo {
     }
 
     @Override
-    public void deleteById(String s)
+    public void deleteById(Integer s)
     {
 
     }

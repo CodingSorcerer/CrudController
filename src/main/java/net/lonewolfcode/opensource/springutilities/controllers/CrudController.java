@@ -5,7 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import net.lonewolfcode.opensource.springutilities.annotations.CrudRepo;
 import net.lonewolfcode.opensource.springutilities.errors.BadRequestBodyException;
 import net.lonewolfcode.opensource.springutilities.errors.NotFoundException;
+import net.lonewolfcode.opensource.springutilities.errors.TypeConversionError;
 import net.lonewolfcode.opensource.springutilities.services.AnnotationService;
+import net.lonewolfcode.opensource.springutilities.services.TypeConversionService;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.http.HttpStatus;
@@ -69,21 +71,22 @@ public class CrudController {
 
     /**
      * This gets a specific entity from the repository.<br>
-     * <b>WARNING:</b> As of this moment only entities with a single id field that is a string are supported.
-     *                 More functionality will be implemented later.
+     * <b>WARNING:</b> As of this moment only entities with a single id field that is a primitive type or wrapper class
+     *                 or class with a single primitive type constructor are supported. It also accepts strings but it was
+     *                 easier to say primitive.
+     *                 Will be upgraded later to support embedded IDs.
      * @param repositoryName this path variable is your set basePathName or the name of the repository class
      *                       if now basePathName was provided.
      * @param id the id of the object you wish to find
      * @return the specified entity
      * @throws NotFoundException if the path you enter refers to a nonexistent repository or if your CrudRepo
      *                           annotation is set to disallow this function, this error is thrown.
+     * @throws TypeConversionError if the ID entered, does not parse to the id type of the entity you're looking for,
+     *                             this error will be thrown.
      */
     @GetMapping("/{repositoryName}/{id}")
-    public Object doGetStringId(@PathVariable String repositoryName,@PathVariable String id) throws NotFoundException {
-        Object output = getStringId(repositoryName,id);
-        if (!AnnotationService.getCrudRepository(repositories.get(repositoryName).getClass()).allowGetById())
-            throw new NotFoundException();
-        return output;
+    public Object doGetById(@PathVariable String repositoryName, @PathVariable String id) throws NotFoundException, TypeConversionError {
+        return getOrDeleteById(repositoryName,id,true);
     }
 
     /**
@@ -114,26 +117,33 @@ public class CrudController {
 
     /**
      * This deletes a specific entity from the repository.<br>
-     * <b>WARNING:</b> As of this moment only entities with a single id field that is a string are supported.
-     *                 More functionality will be implemented later.
+     * <b>WARNING:</b> As of this moment only entities with a single id field that is a primitive type or wrapper class
+     *                 or class with a single primitive type constructor are supported. It also accepts strings but it was
+     *                 easier to say primitive.
+     *                 Will be upgraded later to support embedded IDs.
      * @param repositoryName this path variable is your set basePathName or the name of the repository class
      *                       if now basePathName was provided.
      * @param id the id of the object you wish to delete
      * @throws NotFoundException if the path you enter refers to a nonexistent repository or if your CrudRepo
      *                           annotation is set to disallow this function, this error is thrown.
+     * @throws TypeConversionError if the ID entered, does not parse to the id type of the entity you're looking for,
+     *                             this error will be thrown.
      */
     @DeleteMapping("/{repositoryName}/{id}")
-    public void doDeleteStringId(@PathVariable String repositoryName,@PathVariable String id) throws NotFoundException {
-        getStringId(repositoryName,id);
-        if (!AnnotationService.getCrudRepository(repositories.get(repositoryName).getClass()).allowDelete())
-            throw new NotFoundException();
-        repositories.get(repositoryName).deleteById(id);
+    public void doDeleteById(@PathVariable String repositoryName, @PathVariable String id) throws NotFoundException, TypeConversionError {
+
+        repositories.get(repositoryName).deleteById(getOrDeleteById(repositoryName,id,false));
     }
 
-    private Object getStringId(String repositoryName,String id) throws NotFoundException {
+    private Object getOrDeleteById(String repositoryName, String id, Boolean get) throws NotFoundException, TypeConversionError {
         if(!repositories.containsKey(repositoryName)) throw new NotFoundException();
-        Optional<Object> entity = repositories.get(repositoryName).findById(id);
+        CrudRepo crudRepoTag = AnnotationService.getCrudRepository(repositories.get(repositoryName).getClass());
+        Object typedId = TypeConversionService.convertToFieldType(id,AnnotationService.getIdField(crudRepoTag.entityClass()));
+
+        if(get&!crudRepoTag.allowGetById()||!get&!crudRepoTag.allowDelete()) throw new NotFoundException();
+
+        Optional<Object> entity = repositories.get(repositoryName).findById(typedId);
         if(!entity.isPresent()) throw new NotFoundException();
-        return entity.get();
+        return get?entity.get():typedId;
     }
 }

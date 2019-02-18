@@ -8,6 +8,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 @CrudRepo(entityClass = PersonEntity.class, basePathName = "denied",
         allowDelete = false, allowGetAll = false, allowGetById = false, allowPost = false)
-public interface DeniedRepo extends CrudRepository<PersonEntity,String>
+public interface DeniedRepo extends CrudRepository<PersonEntity,Integer>
 {
 }

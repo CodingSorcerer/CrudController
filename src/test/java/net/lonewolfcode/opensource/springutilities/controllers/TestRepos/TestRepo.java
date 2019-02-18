@@ -7,5 +7,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @CrudRepo(entityClass = PersonEntity.class, basePathName = "people")
-public interface TestRepo extends CrudRepository<PersonEntity,String> {
+public interface TestRepo extends CrudRepository<PersonEntity,Integer> {
 }

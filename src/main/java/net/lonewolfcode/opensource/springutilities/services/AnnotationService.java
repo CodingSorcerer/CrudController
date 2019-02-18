@@ -2,8 +2,10 @@ package net.lonewolfcode.opensource.springutilities.services;
 
 import net.lonewolfcode.opensource.springutilities.annotations.CrudRepo;
 
+import javax.persistence.Id;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedType;
+import java.lang.reflect.Field;
 
 /**
  * Aids in getting annotation objects from classes and their interfaces. This was created because getting annotated
@@ -43,5 +45,22 @@ public class AnnotationService
      */
     public static CrudRepo getCrudRepository(Class annotated) {
         return (CrudRepo) getAnnotationFromClass(annotated,CrudRepo.class);
+    }
+
+    /**
+     * Gets the Id annotated field from a JPA Entity object
+     * @param annotated the class which we wish to get the id field from
+     * @return the field if present, or null if not
+     */
+    public static Field getIdField(Class annotated) {
+        Field output = null;
+        Field[] fields = annotated.getDeclaredFields();
+        for (Field field:fields){
+            if (field.getAnnotation(Id.class)!=null){
+                output = field;
+                break;
+            }
+        }
+        return output;
     }
 }

@@ -49,7 +49,7 @@ public @interface CrudRepo {
     /**
      * This parameter tells the CrudController weather or not the Delete function should be performed on this
      * repository. this defaults to true.
-     * @see net.lonewolfcode.opensource.springutilities.controllers.CrudController#doDeleteStringId(String, String)
+     * @see net.lonewolfcode.opensource.springutilities.controllers.CrudController#doDeleteById(String, String)
      * @return a boolean representing this permission
      */
     boolean allowDelete() default true;
@@ -57,7 +57,7 @@ public @interface CrudRepo {
     /**
      * This parameter tells the CrudController weather or not the Get single object function should be performed
      * on this repository. this defaults to true.
-     * @see net.lonewolfcode.opensource.springutilities.controllers.CrudController#doGetStringId(String, String)
+     * @see net.lonewolfcode.opensource.springutilities.controllers.CrudController#doGetById(String, String)
      * @return a boolean representing this permission
      */
     boolean allowGetById() default true;
