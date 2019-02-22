@@ -101,10 +101,6 @@ public class CrudController {
 
     /**
      * This gets a specific entity from the repository.<br>
-     * <b>WARNING:</b> As of this moment only entities with a single id field that is a primitive type or wrapper class
-     *                 or class with a single primitive type constructor are supported. It also accepts strings but it was
-     *                 easier to say primitive.
-     *                 Will be upgraded later to support embedded IDs.
      * @param repositoryName this path variable is your set basePathName or the name of the repository class
      *                       if now basePathName was provided.
      * @param id the id of the object you wish to find
@@ -147,10 +143,6 @@ public class CrudController {
 
     /**
      * This deletes a specific entity from the repository.<br>
-     * <b>WARNING:</b> As of this moment only entities with a single id field that is a primitive type or wrapper class
-     *                 or class with a single primitive type constructor are supported. It also accepts strings but it was
-     *                 easier to say primitive.
-     *                 Will be upgraded later to support embedded IDs.
      * @param repositoryName this path variable is your set basePathName or the name of the repository class
      *                       if now basePathName was provided.
      * @param id the id of the object you wish to delete
