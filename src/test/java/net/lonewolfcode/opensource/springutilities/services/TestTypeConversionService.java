@@ -2,11 +2,14 @@ package net.lonewolfcode.opensource.springutilities.services;
 
 import net.lonewolfcode.opensource.springutilities.errors.TypeConversionError;
 import net.lonewolfcode.opensource.springutilities.services.testData.NonPrimField;
+import net.lonewolfcode.opensource.springutilities.services.testData.TestId;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Map;
 
 @SpringBootTest
 public class TestTypeConversionService {
@@ -47,5 +50,35 @@ public class TestTypeConversionService {
             Assert.assertEquals("Error converting string \"this is not an int\" to type \"java.lang.Integer\"",e.getMessage());
             throw e;
         }
+    }
+
+    @Test
+    public void convertMapToObjectSuccess() throws TypeConversionError {
+        Map<String,String> params = new HashMap<>();
+        params.put("key1","info");
+        params.put("key2","123");
+        params.put("key3","true");
+        TestId expected = new TestId("info",123,true);
+
+        Object actual = TypeConversionService.convertMapToObject(params, TestId.class);
+        Assert.assertEquals(expected,actual);
+    }
+
+    @Test
+    public void convertMapToObjectFieldsMissing() throws TypeConversionError {
+        Map<String,String> params = new HashMap<>();
+        params.put("key1","info");
+        TestId expected = new TestId("info",0,false);
+
+        Object actual = TypeConversionService.convertMapToObject(params, TestId.class);
+        Assert.assertEquals(expected,actual);
+    }
+
+    @Test(expected = TypeConversionError.class)
+    public void convertMapToObjectBadType() throws TypeConversionError {
+        Map<String,String> params = new HashMap<>();
+        params.put("key2","this cant be parsed to int. oopse!");
+
+        TypeConversionService.convertMapToObject(params,TestId.class);
     }
 }

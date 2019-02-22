@@ -1,9 +1,12 @@
 package net.lonewolfcode.opensource.springutilities.controllers;
 
 import net.lonewolfcode.opensource.springutilities.annotations.CrudRepo;
+import net.lonewolfcode.opensource.springutilities.controllers.TestEntities.EmbeddableId;
+import net.lonewolfcode.opensource.springutilities.controllers.TestEntities.EmbededEntity;
 import net.lonewolfcode.opensource.springutilities.controllers.TestEntities.PersonEntity;
 import net.lonewolfcode.opensource.springutilities.controllers.TestEntities.ShapeEntity;
 import net.lonewolfcode.opensource.springutilities.controllers.TestRepos.DeniedRepo;
+import net.lonewolfcode.opensource.springutilities.controllers.TestRepos.EmbededRepo;
 import net.lonewolfcode.opensource.springutilities.controllers.TestRepos.Shapes;
 import net.lonewolfcode.opensource.springutilities.controllers.TestRepos.TestRepo;
 import net.lonewolfcode.opensource.springutilities.errors.NotFoundException;
@@ -31,16 +34,22 @@ public class TestCrudController {
     private TestRepo testRepo;
     @Mock
     private DeniedRepo deniedRepo;
+    @Mock
+    private EmbededRepo embededRepo;
 
     private static final String TESTREPO1 = "shapes";
     private static final String TESTREPO2 = "people";
     private static final String UNUSEDNAME = "testrepo";
     private static final String DENIED = "denied";
+    private static final String EMBEDDED = "testid";
     private static final ShapeEntity RECTANGLE = new ShapeEntity("rectangle");
     private static final PersonEntity KRYSTAL = new PersonEntity(123,"Krystal");
+    private static final EmbeddableId EMBEDDABLE_ID = new EmbeddableId("abcd",1234);
+    private static final EmbededEntity EMBEDED_ENTITY = new EmbededEntity(EMBEDDABLE_ID, "test");
     private CrudController testController;
     private ArrayList<ShapeEntity> expectedShapes;
     private ArrayList<PersonEntity> expectedPersons;
+    private ArrayList<EmbededEntity> expectedEntites;
 
     @Before
     public void setup(){
@@ -51,6 +60,9 @@ public class TestCrudController {
         expectedPersons = new ArrayList<>();
         expectedPersons.add(KRYSTAL);
 
+        expectedEntites = new ArrayList<>();
+        expectedEntites.add(EMBEDED_ENTITY);
+
         ArrayList<Object> deniedObjects = new ArrayList<>();
         deniedObjects.add(DENIED);
 
@@ -59,11 +71,13 @@ public class TestCrudController {
         Mockito.when(shapes.findById(RECTANGLE.getName())).thenReturn(Optional.of(RECTANGLE));
         Mockito.when(testRepo.findAll()).thenReturn(expectedPersons);
         Mockito.when(testRepo.findById(KRYSTAL.getId())).thenReturn(Optional.of(KRYSTAL));
+        Mockito.when(embededRepo.findById(EMBEDDABLE_ID)).thenReturn(Optional.of(EMBEDED_ENTITY));
 
         Map<String,Object> CrudObjects = new HashMap<>();
         CrudObjects.put(TESTREPO1, shapes);
         CrudObjects.put(UNUSEDNAME,testRepo);
         CrudObjects.put(DENIED,deniedRepo);
+        CrudObjects.put(EMBEDDED, embededRepo);
 
         Mockito.when(beanLister.getBeansWithAnnotation(CrudRepo.class)).thenReturn(CrudObjects);
 
@@ -71,20 +85,20 @@ public class TestCrudController {
     }
 
     @Test
-    public void doGetAllDefault() throws NotFoundException {
-        List<Object> actual = testController.doGetAll(TESTREPO1);
+    public void doGetAllDefault() throws Exception {
+        Object actual = testController.doGet(TESTREPO1,null);
         Assert.assertEquals(expectedShapes,actual);
     }
 
     @Test
-    public void doGetAllSpecifiedPathName() throws NotFoundException {
-        List<Object> actual = testController.doGetAll(TESTREPO2);
+    public void doGetAllSpecifiedPathName() throws Exception {
+        Object actual = testController.doGet(TESTREPO2,null);
         Assert.assertEquals(expectedPersons,actual);
     }
 
     @Test(expected = NotFoundException.class)
-    public void doGetAllNonexistantRepo() throws NotFoundException {
-        testController.doGetAll(UNUSEDNAME);
+    public void doGetAllNonexistantRepo() throws Exception {
+        testController.doGet(UNUSEDNAME,null);
     }
 
     @Test
@@ -167,12 +181,46 @@ public class TestCrudController {
     }
 
     @Test(expected = NotFoundException.class)
-    public void doGetAllDenied() throws NotFoundException{
-        testController.doGetAll(DENIED);
+    public void doGetAllDenied() throws Exception{
+        testController.doGet(DENIED,null);
     }
 
     @Test(expected = NotFoundException.class)
     public void doGetByIdDenied() throws Exception{
         testController.doGetById(DENIED,KRYSTAL.getId().toString());
+    }
+
+    @Test
+    public void doGetSuccessOneOff() throws Exception {
+        Map<String,String> params = new HashMap<>();
+        params.put("key1",EMBEDDABLE_ID.getKey1());
+        params.put("key2", EMBEDDABLE_ID.getKey2().toString());
+        Object actual = testController.doGet(EMBEDDED, params);
+
+        Mockito.verify(embededRepo).findById(EMBEDDABLE_ID);
+        Assert.assertEquals(EMBEDED_ENTITY,actual);
+    }
+
+    @Test
+    public void doGetSuccessAll() throws Exception {
+        Object actual = testController.doGet(TESTREPO1,null);
+        Mockito.verify(shapes).findAll();
+        Assert.assertEquals(expectedShapes,actual);
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void doGetWrongParams() throws Exception {
+        Map<String,String> params = new HashMap<>();
+        params.put("key1","hi!!!!!");
+        params.put("key2", EMBEDDABLE_ID.getKey2().toString());
+        testController.doGet(EMBEDDED,params);
+    }
+
+    @Test
+    public void doGetIdQuery() throws Exception {
+        Map<String,String> params = new HashMap<>();
+        params.put("id",RECTANGLE.getName());
+        Object actual = testController.doGet(TESTREPO1,params);
+        Assert.assertEquals(RECTANGLE,actual);
     }
 }

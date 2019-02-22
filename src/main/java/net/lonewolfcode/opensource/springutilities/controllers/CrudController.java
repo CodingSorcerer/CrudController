@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.*;
 
 /**
@@ -49,6 +50,35 @@ public class CrudController {
     }
 
     /**
+     * This class handles a git with query parameters. If the parameters are null, it does a get all. If there
+     * is exactly one parameter named "ID" then we call doGetById. Otherwise we put all inputs into an object then
+     * query the repository for the quested item.
+     * @param repositoryName the name of the repository we're working with
+     * @param params the url parameters passed in
+     * @return The object requested, or the entire contents of the repository.
+     * @throws NotFoundException thrown if a resource is not found. i.e. the  repository does not exist or the
+     *                           repository does not contain the requested item.
+     * @throws TypeConversionError thrown if the parameters cannot be converted to the entity id type for some
+     *                             reason.
+     */
+    @GetMapping("/{repositoryName}")
+    public Object doGet (@PathVariable String repositoryName, @RequestParam Map<String,String> params) throws NotFoundException, TypeConversionError {
+        Object output = null;
+
+        if(params==null||params.isEmpty()) {
+            output = doGetAll(repositoryName);
+        }else{
+            if (params.size()==1&&params.containsKey("id")){
+                output = doGetById(repositoryName,params.get("id"));
+            } else {
+                output = getOrDeleteById(repositoryName,params,true);
+            }
+        }
+
+        return output;
+    }
+
+    /**
      * This gets all instances of the entity that the annotated repository controls and returns them in a
      * list.
      * @param repositoryName this path variable is your set basePathName or the name of the repository class
@@ -57,8 +87,8 @@ public class CrudController {
      * @throws NotFoundException if the path you enter refers to a nonexistent repository or if your CrudRepo
      *                           annotation is set to disallow this function, this error is thrown.
      */
-    @GetMapping("/{repositoryName}")
-    public List<Object> doGetAll(@PathVariable String repositoryName) throws NotFoundException {
+
+    private List<Object> doGetAll(String repositoryName) throws NotFoundException {
         ArrayList<Object> output = new ArrayList<>();
 
         if (!repositories.containsKey(repositoryName)) throw new NotFoundException(repositoryName);
@@ -135,12 +165,12 @@ public class CrudController {
         repositories.get(repositoryName).deleteById(getOrDeleteById(repositoryName,id,false));
     }
 
-    private Object getOrDeleteById(String repositoryName, String id, Boolean get) throws NotFoundException, TypeConversionError {
+    private Object getOrDeleteById(String repositoryName, Object id, Boolean get) throws NotFoundException, TypeConversionError {
         if(!repositories.containsKey(repositoryName)) throw new NotFoundException();
         CrudRepo crudRepoTag = AnnotationService.getCrudRepository(repositories.get(repositoryName).getClass());
-        Object typedId = TypeConversionService.convertToFieldType(id,AnnotationService.getIdField(crudRepoTag.entityClass()));
-
         if(get&!crudRepoTag.allowGetById()||!get&!crudRepoTag.allowDelete()) throw new NotFoundException();
+
+        Object typedId = TypeConversionService.convertToFieldType(id,AnnotationService.getIdField(crudRepoTag.entityClass()));
 
         Optional<Object> entity = repositories.get(repositoryName).findById(typedId);
         if(!entity.isPresent()) throw new NotFoundException();

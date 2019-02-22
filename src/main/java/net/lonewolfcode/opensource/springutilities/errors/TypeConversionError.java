@@ -20,4 +20,8 @@ public class TypeConversionError extends Exception {
     public TypeConversionError(String input, String target) {
         super(String.format("Error converting string \"%s\" to type \"%s\"", input, target));
     }
+
+    public TypeConversionError(String message){
+        super(message);
+    }
 }

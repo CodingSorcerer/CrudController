@@ -2,6 +2,7 @@ package net.lonewolfcode.opensource.springutilities.services;
 
 import net.lonewolfcode.opensource.springutilities.annotations.CrudRepo;
 
+import javax.persistence.EmbeddedId;
 import javax.persistence.Id;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedType;
@@ -53,10 +54,22 @@ public class AnnotationService
      * @return the field if present, or null if not
      */
     public static Field getIdField(Class annotated) {
+        Field output = getAnnotatedField(annotated,Id.class);
+        if (output==null) output = getAnnotatedField(annotated, EmbeddedId.class);
+        return output;
+    }
+
+    /**
+     * retries a field from a class, that has the specified annotation.
+     * @param annotated the annotated class
+     * @param fieldAnnotation the annotation you're looking for
+     * @return the field if present, or null if not
+     */
+    public static Field getAnnotatedField(Class annotated, Class fieldAnnotation){
         Field output = null;
         Field[] fields = annotated.getDeclaredFields();
         for (Field field:fields){
-            if (field.getAnnotation(Id.class)!=null){
+            if (field.getAnnotation(fieldAnnotation)!=null){
                 output = field;
                 break;
             }
