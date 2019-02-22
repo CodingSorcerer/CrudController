@@ -13,6 +13,7 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import javax.websocket.server.PathParam;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.*;
@@ -155,6 +156,26 @@ public class CrudController {
     public void doDeleteById(@PathVariable String repositoryName, @PathVariable String id) throws NotFoundException, TypeConversionError {
 
         repositories.get(repositoryName).deleteById(getOrDeleteById(repositoryName,id,false));
+    }
+
+    /**
+     * This delete function allows for the use of url parameters. Handy for deleting things with composite keys.
+     * @param repositoryName the name of the repository to delete from
+     * @param params the url parameters passed in
+     * @throws NotFoundException thrown if no repository or entity can be found
+     * @throws TypeConversionError thrown if there's an issue converting the parameters to the Entity's Id Type
+     */
+    @DeleteMapping("/{repositoryName}")
+    public void doDeleteByParams(@PathVariable String repositoryName, @RequestParam Map<String,String> params) throws NotFoundException, TypeConversionError {
+        if(params==null||params.isEmpty()) {
+            throw new NotFoundException();
+        }else{
+            if (params.size()==1&&params.containsKey("id")){
+                doDeleteById(repositoryName,params.get("id"));
+            } else {
+                repositories.get(repositoryName).deleteById(getOrDeleteById(repositoryName,params,false));
+            }
+        }
     }
 
     private Object getOrDeleteById(String repositoryName, Object id, Boolean get) throws NotFoundException, TypeConversionError {

@@ -1,5 +1,6 @@
 package net.lonewolfcode.opensource.springutilities.controllers;
 
+import com.sun.org.apache.regexp.internal.RE;
 import net.lonewolfcode.opensource.springutilities.annotations.CrudRepo;
 import net.lonewolfcode.opensource.springutilities.controllers.TestEntities.EmbeddableId;
 import net.lonewolfcode.opensource.springutilities.controllers.TestEntities.EmbededEntity;
@@ -87,6 +88,7 @@ public class TestCrudController {
     @Test
     public void doGetAllDefault() throws Exception {
         Object actual = testController.doGet(TESTREPO1,null);
+        Mockito.verify(shapes).findAll();
         Assert.assertEquals(expectedShapes,actual);
     }
 
@@ -201,13 +203,6 @@ public class TestCrudController {
         Assert.assertEquals(EMBEDED_ENTITY,actual);
     }
 
-    @Test
-    public void doGetSuccessAll() throws Exception {
-        Object actual = testController.doGet(TESTREPO1,null);
-        Mockito.verify(shapes).findAll();
-        Assert.assertEquals(expectedShapes,actual);
-    }
-
     @Test(expected = NotFoundException.class)
     public void doGetWrongParams() throws Exception {
         Map<String,String> params = new HashMap<>();
@@ -222,5 +217,28 @@ public class TestCrudController {
         params.put("id",RECTANGLE.getName());
         Object actual = testController.doGet(TESTREPO1,params);
         Assert.assertEquals(RECTANGLE,actual);
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void doDeleteByParamsEmptyQuery() throws Exception {
+        testController.doDeleteByParams(TESTREPO1,null);
+    }
+
+    @Test
+    public void doDeleteByParamsIdQuery() throws Exception {
+        Map<String,String> params = new HashMap<>();
+        params.put("id", RECTANGLE.getName());
+        testController.doDeleteByParams(TESTREPO1, params);
+        Mockito.verify(shapes).deleteById(RECTANGLE.getName());
+    }
+
+    @Test
+    public void doDelteByParamsEmbededId() throws Exception {
+        Map<String,String> params = new HashMap<>();
+        params.put("key1","abcd");
+        params.put("key2","1234");
+
+        testController.doDeleteByParams(EMBEDDED,params);
+        Mockito.verify(embededRepo).deleteById(EMBEDDABLE_ID);
     }
 }
